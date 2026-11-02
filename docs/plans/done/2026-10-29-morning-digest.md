@@ -1,8 +1,9 @@
 ---
 plan: morning-digest
-status: ready
+status: done
 owner: rook
 opened: 2026-10-29
+closed: 2026-11-02
 ---
 
 # Morning digest
@@ -77,3 +78,29 @@ page again with `LANE_MARKER` unset (the banner reads "no marker set") and uploa
 link. Move this plan to `docs/plans/done/` with its issue list.
 
 Done when: the preview link no longer shows the lane marker.
+
+## Issues
+
+| # | Issue | Blocked by | Worker | Closed |
+|---|-------|-----------|--------|--------|
+| 1 | Run log reader | — | claude-code · opus-5 · high | 2026-11-02 |
+| 2 | Digest page | #1 | claude-code · sonnet-5.5 · medium | 2026-11-02 |
+| 3 | Digest JSON | #1 | claude-code · sonnet-5.5 · medium | 2026-11-02 |
+| 4 | Board link | #1 | claude-code · sonnet-5.5 · medium | 2026-11-02 |
+| 5 | Route tests | #1 | claude-code · sonnet-5.5 · medium | 2026-11-02 |
+| 6 | Preview for review | #2, #4 | claude-code · opus-5 · high | 2026-11-02 |
+| 7 | Clean up | #6 | claude-code · opus-5 · high | 2026-11-02 |
+
+Section 1 went to the strongest model because it is parsing and error handling; sections 2a–2d
+went to a cheaper one because they are views and tests. The reader sorts rows by job once, so
+the page and the JSON cannot disagree about order.
+
+#4 was built by its worker but closed later, by hand, once #2 had merged: its worker could not
+reach the digest route from its own worktree and left the issue open rather than claim a Done
+when it could not check.
+
+#6 was closed once and reopened. It had been closed when the preview link was sent, not when the
+reviewer had read it. Sending is not reviewing; this plan's section 3 says "the preview link is
+sent", and the 2026-10-19 plan says plainly "the reviewer has reviewed it".
+
+The preview lost its marker the same day the review came in. See ADR 0003.
