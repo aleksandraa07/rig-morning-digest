@@ -108,3 +108,26 @@ describe('GET /api/digest/:night', () => {
     expect(body.rows.map((r) => r.job)).toEqual(['a/first', 'b/second']);
   });
 });
+
+// Not a case plan.md § 2d lists. It is here because src/app.tsx carries a guard for it: the
+// `:night` parameter is joined into a file path, so a name that is not a date must never reach
+// the read. A guard nobody tests is a guard someone deletes.
+describe('a night name that is not a date', () => {
+  const odd = ['..%2Frig', '..%2F..%2Fetc%2Fpasswd', 'not-a-date', '2026-11-01.jsonl'];
+
+  it('is refused by the page without touching the filesystem', async () => {
+    const app = appWithRuns({ '2026-11-01.jsonl': GOOD });
+    for (const name of odd) {
+      const res = await app.request(`/digest/${name}`);
+      expect(res.status, `page accepted ${name}`).toBe(404);
+    }
+  });
+
+  it('is refused by the JSON route too', async () => {
+    const app = appWithRuns({ '2026-11-01.jsonl': GOOD });
+    for (const name of odd) {
+      const res = await app.request(`/api/digest/${name}`);
+      expect(res.status, `JSON accepted ${name}`).toBe(404);
+    }
+  });
+});
