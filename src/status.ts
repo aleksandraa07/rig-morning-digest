@@ -1,13 +1,31 @@
 import { readdirSync } from 'node:fs';
 import type { RigConfig } from './config.js';
+import { readNight } from './digest/reader.js';
+import type { RunStatus } from './digest/types.js';
 import { lastBeat, type Beat } from './heartbeat.js';
 
 export type Status = {
   adapter: string;
   installed: string;
   lastBeat: Beat | null;
-  nights: string[];
+  nights: NightSummary[];
 };
+
+// Counts are per job, by the job's last status of the night (DigestRow.lastStatus), not per
+// log line: a job that retried three times and then succeeded is one ok, not three retries.
+// `null` counts: the night's file could not be read, shown as an em dash.
+export type NightSummary = {
+  night: string;
+  counts: Record<RunStatus, number> | null;
+};
+
+export function summariseNight(runsDir: string, night: string): NightSummary {
+  const read = readNight(runsDir, night);
+  if (read === null) return { night, counts: null };
+  const counts: Record<RunStatus, number> = { ok: 0, retry: 0, fail: 0 };
+  for (const row of read.rows) counts[row.lastStatus]++;
+  return { night, counts };
+}
 
 // Nights on disk = runs/<YYYY-MM-DD>.jsonl, newest first.
 export function nightsOnDisk(runsDir: string): string[] {
@@ -27,6 +45,6 @@ export function readStatus(config: RigConfig): Status {
     adapter: config.adapter,
     installed: config.installed,
     lastBeat: lastBeat(),
-    nights: nightsOnDisk(config.runsDir),
+    nights: nightsOnDisk(config.runsDir).map((n) => summariseNight(config.runsDir, n)),
   };
 }
